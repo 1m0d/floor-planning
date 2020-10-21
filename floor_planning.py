@@ -3,9 +3,9 @@ import heapq
 class Rectangle:
   rect_count = 0
 
-  def __init__(self, height, width):
-    self.height = height
+  def __init__(self, width, height):
     self.width = width
+    self.height = height
     self.rotated = False
     self.domain = []
     self.position = {}
@@ -17,20 +17,11 @@ class Rectangle:
   def size(self):
       return self.height * self.width
 
+  # reversed for heapq
   def __lt__(self, other):
-    return self.height * self.width < other.height * other.width
+    return self.height * self.width > other.height * other.width
 
-  @property
-  def position(self):
-    return self._position
-
-  @position.setter
-  def position(self, position):
-    self._position = position
-    self.__calcualte_occupied_space()
-
-  # TODO: remove
-  def __calcualte_occupied_space(self):
+  def calculate_occupied_space(self):
     if(not self.position): return
 
     self.occupied_space = []
@@ -45,8 +36,7 @@ class Rectangle:
       #  raise('cannot rotate rectangle after position is set')
 
     self.width, self.height = self.height, self.width
-    self.rotated = True
-
+    self.rotated = not self.rotated
 
 class Room:
   def __init__(self, height, width):
@@ -66,52 +56,73 @@ class Room:
     for _ in range(2):
       delta_h = self.height - rectangle.height
       delta_w = self.width - rectangle.width
-      if(delta_h <= 0 or delta_w <= 0): return
+      if(delta_h <= 0 or delta_w <= 0):
+        rectangle.rotate()
+        continue
 
-      for h in range(delta_h):
-        for w in range (delta_w):
-          rectangle.domain.append({'x': h, 'y': w, 'rotated': rectangle.rotated})
+      for h in range(delta_h + 1):
+        for w in range (delta_w + 1):
+          rectangle.domain.append({'x': w, 'y': h, 'rotated': rectangle.rotated})
 
       rectangle.rotate()
 
-  def calculate_domain(self, rectangle):
+  def reduce_domain(self, rectangle):
     domain = rectangle.domain
     if(not domain):
       return
 
     for rectangle2 in self.rectangles:
-      if(not rectangle2.position): next
+      if(not bool(rectangle2.position)): continue
 
       sum_h = rectangle.height + rectangle2.height
       sum_w = rectangle.width + rectangle2.width
+      unsatisfactory_domain = []
       reduced_domain = []
 
+      y_range = range(rectangle2.position['y'], rectangle2.position['y'] + rectangle2.height)
+      x_range = range(rectangle2.position['x'], rectangle2.position['x'] + rectangle2.width)
+
       if(sum_w > self.width):
-        y_range = range(rectangle2.position['y'], rectangle2.position['y'] + rectangle2.height)
         for domain_value in domain:
-          if(domain_value['y'] not in range(y_range)):
-            reduced_domain.append(domain_value)
+          if(domain_value['rotated'] == rectangle.rotated and domain_value['y'] in y_range):
+            unsatisfactory_domain.append(domain_value)
+
+      reduced_domain = [x for x in domain if x not in unsatisfactory_domain]
 
       if(not reduced_domain):
         rectangle.domain = reduced_domain
         return
 
+      unsatisfactory_domain = []
       if(sum_h > self.height):
-        x_range = range(rectangle2.position['x'], rectangle2.position['x'] + rectangle2.width)
-        for domain_value in domain:
-          if(domain_value['x'] not in range(x_range)):
-            reduced_domain.append(domain_value)
+        for domain_value in reduced_domain:
+          if(domain_value['rotated'] == rectangle.rotated and domain_value['x'] in x_range):
+            unsatisfactory_domain.append(domain_value)
 
-    rectangle.domain = reduced_domain
+      reduced_domain = [x for x in reduced_domain if x not in unsatisfactory_domain]
+
+      unsatisfactory_domain = []
+      for domain_value in reduced_domain:
+        if(domain_value['rotated'] == rectangle.rotated):
+          if(domain_value['x'] in x_range and domain_value['y'] in y_range):
+            unsatisfactory_domain.append(domain_value)
+
+      reduced_domain = [x for x in reduced_domain if x not in unsatisfactory_domain]
+      domain = reduced_domain
+
+
+
+    rectangle.domain = domain
 
   def find_rectangle_id(self, x, y):
     for rectangle in self.rectangles:
-      if(not rectangle.position): next
+      if(not bool(rectangle.position)): continue
+      rectangle.calculate_occupied_space()
       if({'x': x, 'y': y} in rectangle.occupied_space):
         return rectangle.id
 
     #  raise(Exception('Cannot find rectangle x:{}, y:{}'.format(x, y)))
-    return 'a'
+    return ' '
 
 
   def __str__(self):
@@ -145,6 +156,7 @@ for _ in range(rectangle_count):
   data = parse_int_from_input()
   rectangle = Rectangle(data[0], data[1])
   room.calculate_base_domain(rectangle)
+  room.add_rectangle(rectangle)
 
 # minimum remaining variable que for unassigned variable selecting
 mrv_que = []
@@ -153,8 +165,21 @@ for rect in room.rectangles:
   heapq.heappush(mrv_que, rect)
 
 def backtrack():
-  if(len(mrv_que) == 0): return
+  if(len(mrv_que) == 0): return True
   rectangle = heapq.heappop(mrv_que)
+  room.reduce_domain(rectangle)
+  rectangle.rotate()
+  room.reduce_domain(rectangle)
+  for domain_value in rectangle.domain:
+    rectangle.position = {'x': domain_value['x'], 'y': domain_value['y']}
+    if(rectangle.rotated != domain_value['rotated']):
+      rectangle.rotate()
+    if(backtrack()): return True
+
+  rectangle.position = {}
+  heapq.heappush(mrv_que, rectangle)
+
+  return False
 
 backtrack()
 print(room)
