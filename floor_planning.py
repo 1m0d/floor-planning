@@ -27,6 +27,7 @@ class Rectangle:
     self._position = position
     self.__calcualte_occupied_space()
 
+  # TODO: remove
   def __calcualte_occupied_space(self):
     self.occupied_space = []
     for h in range(self.height):
@@ -64,16 +65,39 @@ class Room:
 
       for h in range(delta_h):
         for w in range (delta_w):
-          rectangle.domains.append({'x': h, 'y': w, 'rotated': rectangle.rotated})
+          rectangle.domain.append({'x': h, 'y': w, 'rotated': rectangle.rotated})
 
       rectangle.rotate()
 
-
   def calculate_domain(self, rectangle):
+    domain = rectangle.domain
+    if(not domain):
+      return
+
     for rectangle2 in self.rectangles:
       sum_h = rectangle.height + rectangle2.height
       sum_w = rectangle.width + rectangle2.width
+      reduced_domain = []
 
+      if(sum_w > self.width):
+        y_range = range(rectangle2.position['y'], rectangle2.position['y'] + rectangle2.height)
+        for domain_value in domain:
+          if(domain_value['y'] not in range(y_range)):
+            reduced_domain.append(domain_value)
+
+      if(not reduced_domain):
+        rectangle.domain = reduced_domain
+        return
+
+      if(sum_h > self.height):
+        x_range = range(rectangle2.position['x'], rectangle2.position['x'] + rectangle2.width)
+        for domain_value in domain:
+          if(domain_value['x'] not in range(x_range)):
+            reduced_domain.append(domain_value)
+
+      if(not reduced_domain):
+        rectangle.domain = reduced_domain
+        return
 
 def parse_int_from_input():
     return list(map(int, input().split('\t')))
