@@ -8,6 +8,8 @@ class Rectangle:
     self.width = width
     self.rotated = False
     self.domain = []
+    self.position = {}
+    self.occupied_space = []
 
     Rectangle.rect_count += 1
     self.id = Rectangle.rect_count
@@ -29,6 +31,8 @@ class Rectangle:
 
   # TODO: remove
   def __calcualte_occupied_space(self):
+    if(not self.position): return
+
     self.occupied_space = []
     for h in range(self.height):
       for w in range(self.width):
@@ -37,8 +41,8 @@ class Rectangle:
         self.occupied_space.append({ 'x': x, 'y': y })
 
   def rotate(self):
-    if(self.position):
-      raise('cannot rotate rectangle after position is set')
+    #  if(self._position):
+      #  raise('cannot rotate rectangle after position is set')
 
     self.width, self.height = self.height, self.width
     self.rotated = True
@@ -57,6 +61,7 @@ class Room:
   def add_rectangle(self, rectangle):
     self.rectangles.append(rectangle)
 
+  # TODO: pillar constraint
   def calculate_base_domain(self, rectangle):
     for _ in range(2):
       delta_h = self.height - rectangle.height
@@ -75,6 +80,8 @@ class Room:
       return
 
     for rectangle2 in self.rectangles:
+      if(not rectangle2.position): next
+
       sum_h = rectangle.height + rectangle2.height
       sum_w = rectangle.width + rectangle2.width
       reduced_domain = []
@@ -95,9 +102,30 @@ class Room:
           if(domain_value['x'] not in range(x_range)):
             reduced_domain.append(domain_value)
 
-      if(not reduced_domain):
-        rectangle.domain = reduced_domain
-        return
+    rectangle.domain = reduced_domain
+
+  def find_rectangle_id(self, x, y):
+    for rectangle in self.rectangles:
+      if(not rectangle.position): next
+      if({'x': x, 'y': y} in rectangle.occupied_space):
+        return rectangle.id
+
+    #  raise(Exception('Cannot find rectangle x:{}, y:{}'.format(x, y)))
+    return 'a'
+
+
+  def __str__(self):
+    result = ""
+    for h in range(self.height):
+      for w in range(self.width):
+        result += str(self.find_rectangle_id(w, h))
+        if(w == self.width - 1):
+          result += "\n"
+        else:
+          result += "\t"
+
+    return result
+
 
 def parse_int_from_input():
     return list(map(int, input().split('\t')))
@@ -117,7 +145,6 @@ for _ in range(rectangle_count):
   data = parse_int_from_input()
   rectangle = Rectangle(data[0], data[1])
   room.calculate_base_domain(rectangle)
-  room.add_rectangle(rectangle)
 
 # minimum remaining variable que for unassigned variable selecting
 mrv_que = []
@@ -130,3 +157,4 @@ def backtrack():
   rectangle = heapq.heappop(mrv_que)
 
 backtrack()
+print(room)
