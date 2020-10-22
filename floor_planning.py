@@ -105,14 +105,22 @@ class Room:
           if(domain_value['x'] in x_range):
             continue
 
-        domain_x_range = range(domain_value['x'], domain_value['x'] + rectangle.width)
-        domain_y_range = range(domain_value['y'], domain_value['y'] + rectangle.height)
-        overlap_x = max(x_range.start, domain_x_range.start) < min(x_range.stop, domain_x_range.stop)
-        overlap_y = max(y_range.start, domain_y_range.start) < min(y_range.stop, domain_y_range.stop)
-        if(overlap_x and overlap_y):
+        l1_x = domain_value['x']
+        l1_y = domain_value['y']
+        r1_x = domain_value['x'] + rectangle.width
+        r1_y = domain_value['y'] + rectangle.height
+        l2_x = x_range.start
+        l2_y = y_range.start
+        r2_x = x_range.stop
+        r2_y = y_range.stop
+
+        if(l1_x >= r2_x or l2_x >= r1_x):
+          reduced_domain.append(domain_value)
           continue
 
-        reduced_domain.append(domain_value)
+        elif(l1_y >= r2_y or l2_y >= r1_y):
+          reduced_domain.append(domain_value)
+          continue
 
       domain = reduced_domain
       if(not domain):
@@ -128,7 +136,8 @@ class Room:
       if({'x': x, 'y': y} in rectangle.occupied_space):
         return rectangle.id
 
-    return '.'
+    #  return '.'
+    raise(Exception("Solution not found"))
 
   def __str__(self):
     result = ""
