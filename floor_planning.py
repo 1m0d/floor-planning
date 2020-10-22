@@ -74,7 +74,6 @@ class Room:
     return False
 
 
-  # TODO: only loop through domains once
   def reduce_domain(self, rectangle):
     domain = rectangle.domain
     if(not domain):
@@ -91,36 +90,26 @@ class Room:
       y_range = range(rectangle2.position['y'], rectangle2.position['y'] + rectangle2.height)
       x_range = range(rectangle2.position['x'], rectangle2.position['x'] + rectangle2.width)
 
-      if(sum_w > self.width):
-        for domain_value in domain:
-          if(domain_value['rotated'] == rectangle.rotated and domain_value['y'] in y_range):
+      for domain_value in domain:
+        if(domain_value['rotated'] != rectangle.rotated): continue
+        if(domain_value in unsatisfactory_domain): continue
+
+        if(sum_w > self.width):
+          if(domain_value['y'] in y_range):
             unsatisfactory_domain.append(domain_value)
+
+        if(sum_h > self.height):
+          if(domain_value['x'] in x_range):
+            unsatisfactory_domain.append(domain_value)
+
+        domain_x_range = range(domain_value['x'], domain_value['x'] + rectangle.width)
+        domain_y_range = range(domain_value['y'], domain_value['y'] + rectangle.height)
+        overlap_x = max(x_range.start, domain_x_range.start) < min(x_range.stop, domain_x_range.stop)
+        overlap_y = max(y_range.start, domain_y_range.start) < min(y_range.stop, domain_y_range.stop)
+        if(overlap_x and overlap_y):
+          unsatisfactory_domain.append(domain_value)
 
       reduced_domain = [x for x in domain if x not in unsatisfactory_domain]
-
-      if(not reduced_domain):
-        rectangle.domain = reduced_domain
-        return
-
-      unsatisfactory_domain = []
-      if(sum_h > self.height):
-        for domain_value in reduced_domain:
-          if(domain_value['rotated'] == rectangle.rotated and domain_value['x'] in x_range):
-            unsatisfactory_domain.append(domain_value)
-
-      reduced_domain = [x for x in reduced_domain if x not in unsatisfactory_domain]
-
-      unsatisfactory_domain = []
-      for domain_value in reduced_domain:
-        if(domain_value['rotated'] == rectangle.rotated):
-          domain_x_range = range(domain_value['x'], domain_value['x'] + rectangle.width)
-          domain_y_range = range(domain_value['y'], domain_value['y'] + rectangle.height)
-          overlap_x = max(x_range.start, domain_x_range.start) < min(x_range.stop, domain_x_range.stop)
-          overlap_y = max(y_range.start, domain_y_range.start) < min(y_range.stop, domain_y_range.stop)
-          if(overlap_x and overlap_y):
-            unsatisfactory_domain.append(domain_value)
-
-      reduced_domain = [x for x in reduced_domain if x not in unsatisfactory_domain]
       domain = reduced_domain
 
     rectangle.domain = domain
