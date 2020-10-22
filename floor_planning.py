@@ -6,10 +6,12 @@ class Rectangle:
   def __init__(self, width, height):
     self.width = width
     self.height = height
+    self.area = width * height
     self.rotated = False
     self.domain = []
     self.position = {}
     self.occupied_space = []
+    self.domain_master = None
 
     Rectangle.rect_count += 1
     self.id = Rectangle.rect_count
@@ -88,6 +90,11 @@ class Room:
     self.rectangles.append(rectangle)
 
   def calculate_base_domain(self, rectangle):
+    if(rectangle.domain_master is not None):
+      rectangle.domain = rectangle.domain_master.domain
+      rectangle.base_domain = rectangle.domain[:]
+      return
+
     for _ in range(2):
       delta_h = self.height - rectangle.height
       delta_w = self.width - rectangle.width
@@ -157,7 +164,6 @@ for _ in range(pillar_count):
 for _ in range(rectangle_count):
   data = parse_int_from_input()
   rectangle = Rectangle(data[0], data[1])
-  room.calculate_base_domain(rectangle)
   room.add_rectangle(rectangle)
 
 # minimum remaining variable que for unassigned variable selecting
@@ -169,10 +175,20 @@ positioned_que = []
 for rect in room.rectangles:
   heapq.heappush(mrv_que, rect)
 
+last_rect = None
+for rect in mrv_que:
+  if(last_rect is not None and last_rect.area == rect.area):
+    rect.domain_master = last_rect
+
+  room.calculate_base_domain(rect)
+  last_rect = rect
+
 def backtrack():
   if(len(mrv_que) == 0): return True
 
   rectangle = heapq.heappop(mrv_que)
+  if(rectangle.domain_master is not None):
+    rectangle.domain = rectangle.domain_master.domain
   rectangle.reduce_domain(positioned_que)
   if(rectangle.width != rectangle.height):
     rectangle.rotate()
@@ -187,7 +203,9 @@ def backtrack():
     positioned_que.pop()
 
   rectangle.position = {}
-  rectangle.domain = rectangle.base_domain[:]
+
+  if(rectangle.domain_master is None):
+    rectangle.domain = rectangle.base_domain[:]
   heapq.heappush(mrv_que, rectangle)
 
   return False
