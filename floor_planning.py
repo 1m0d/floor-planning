@@ -46,11 +46,10 @@ class Rectangle:
     return True
 
   def reduce_domain(self, positioned_que):
-    domain = self.domain
-    if(not domain):
-      return
-
     for rectangle2 in positioned_que:
+      if(not self.domain):
+        return
+
       reduced_domain = []
 
       x2_start = rectangle2.position['x']
@@ -58,7 +57,7 @@ class Rectangle:
       x2_end = rectangle2.position['x'] + rectangle2.width
       y2_end = rectangle2.position['y'] + rectangle2.height
 
-      for domain_value in domain:
+      for domain_value in self.domain:
         if(domain_value['rotated'] != self.rotated):
           reduced_domain.append(domain_value)
           continue
@@ -72,12 +71,7 @@ class Rectangle:
           reduced_domain.append(domain_value)
           continue
 
-      domain = reduced_domain
-      if(not domain):
-        self.domain = domain
-        return
-
-    self.domain = domain
+      self.domain = reduced_domain
 
 
 class Room:
