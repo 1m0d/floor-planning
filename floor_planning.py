@@ -32,9 +32,6 @@ class Rectangle:
         self.occupied_space.append({ 'x': x, 'y': y })
 
   def rotate(self):
-    #  if(self._position):
-      #  raise('cannot rotate rectangle after position is set')
-
     self.width, self.height = self.height, self.width
     self.rotated = not self.rotated
 
