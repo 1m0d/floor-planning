@@ -51,7 +51,6 @@ class Room:
   def add_rectangle(self, rectangle):
     self.rectangles.append(rectangle)
 
-  # TODO: pillar constraint
   def calculate_base_domain(self, rectangle):
     for _ in range(2):
       delta_h = self.height - rectangle.height
@@ -62,10 +61,23 @@ class Room:
 
       for h in range(delta_h + 1):
         for w in range (delta_w + 1):
+          if(self.__pillar_overlap(w, h, rectangle)):
+              continue
           rectangle.domain.append({'x': w, 'y': h, 'rotated': rectangle.rotated})
 
       rectangle.rotate()
 
+  def __pillar_overlap(self, w, h, rectangle):
+    for pillar in self.pillars:
+      x_range = range(w + 1, w + rectangle.width)
+      y_range = range(h + 1, h + rectangle.height)
+      if(pillar['x'] in x_range and pillar['y'] in y_range):
+        return True
+
+    return False
+
+
+  # TODO: only loop through domains once
   def reduce_domain(self, rectangle):
     domain = rectangle.domain
     if(not domain):
