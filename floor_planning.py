@@ -116,13 +116,15 @@ class Room:
       unsatisfactory_domain = []
       for domain_value in reduced_domain:
         if(domain_value['rotated'] == rectangle.rotated):
-          if(domain_value['x'] in x_range and domain_value['y'] in y_range):
+          domain_x_range = range(domain_value['x'], domain_value['x'] + rectangle.width)
+          domain_y_range = range(domain_value['y'], domain_value['y'] + rectangle.height)
+          overlap_x = max(x_range.start, domain_x_range.start) < min(x_range.stop, domain_x_range.stop)
+          overlap_y = max(y_range.start, domain_y_range.start) < min(y_range.stop, domain_y_range.stop)
+          if(overlap_x and overlap_y):
             unsatisfactory_domain.append(domain_value)
 
       reduced_domain = [x for x in reduced_domain if x not in unsatisfactory_domain]
       domain = reduced_domain
-
-
 
     rectangle.domain = domain
 
