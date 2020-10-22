@@ -103,6 +103,8 @@ class Room:
 
       if(rectangle.width != rectangle.height):
         rectangle.rotate()
+      else:
+        break
 
     rectangle.base_domain = rectangle.domain[:]
 
