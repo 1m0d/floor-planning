@@ -64,6 +64,8 @@ class Room:
 
       rectangle.rotate()
 
+    rectangle.base_domain = rectangle.domain[:]
+
   def __pillar_overlap(self, w, h, rectangle):
     for pillar in self.pillars:
       x_range = range(w + 1, w + rectangle.width)
@@ -176,7 +178,7 @@ def backtrack():
     if(backtrack()): return True
 
   rectangle.position = {}
-  room.calculate_base_domain(rectangle)
+  rectangle.domain = rectangle.base_domain[:]
   heapq.heappush(mrv_que, rectangle)
 
   return False
