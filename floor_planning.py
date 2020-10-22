@@ -135,16 +135,14 @@ class Room:
       if({'x': x, 'y': y} in rectangle.occupied_space):
         return rectangle.id
 
-    #  raise(Exception('Cannot find rectangle x:{}, y:{}'.format(x, y)))
-    return ' '
-
+    return '.'
 
   def __str__(self):
     result = ""
     for h in range(self.height):
       for w in range(self.width):
         result += str(self.find_rectangle_id(w, h))
-        if(w == self.width - 1):
+        if(w == self.width - 1 and h != self.height - 1):
           result += "\n"
         else:
           result += "\t"
