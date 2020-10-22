@@ -45,6 +45,40 @@ class Rectangle:
 
     return True
 
+  def reduce_domain(self, positioned_que):
+    domain = self.domain
+    if(not domain):
+      return
+
+    for rectangle2 in positioned_que:
+      reduced_domain = []
+
+      x2_start = rectangle2.position['x']
+      y2_start = rectangle2.position['y']
+      x2_end = rectangle2.position['x'] + rectangle2.width
+      y2_end = rectangle2.position['y'] + rectangle2.height
+
+      for domain_value in domain:
+        if(domain_value['rotated'] != self.rotated):
+          reduced_domain.append(domain_value)
+          continue
+
+        x1_start = domain_value['x']
+        y1_start = domain_value['y']
+        x1_end = domain_value['x'] + self.width
+        y1_end = domain_value['y'] + self.height
+
+        if (not Rectangle.overlap(x1_start, x1_end, y1_start, y1_end, x2_start, x2_end, y2_start, y2_end)):
+          reduced_domain.append(domain_value)
+          continue
+
+      domain = reduced_domain
+      if(not domain):
+        self.domain = domain
+        return
+
+    self.domain = domain
+
 
 class Room:
   def __init__(self, height, width):
@@ -86,42 +120,6 @@ class Room:
         return True
 
     return False
-
-
-  def reduce_domain(self, rectangle):
-    domain = rectangle.domain
-    if(not domain):
-      return
-
-    for rectangle2 in self.rectangles:
-      if(not bool(rectangle2.position)): continue
-
-      reduced_domain = []
-
-      x2_start = rectangle2.position['x']
-      y2_start = rectangle2.position['y']
-      x2_end = rectangle2.position['x'] + rectangle2.width
-      y2_end = rectangle2.position['y'] + rectangle2.height
-
-      for domain_value in domain:
-        if(domain_value['rotated'] != rectangle.rotated):
-          reduced_domain.append(domain_value)
-          continue
-
-        x1_start = domain_value['x']
-        y1_start = domain_value['y']
-        x1_end = domain_value['x'] + rectangle.width
-        y1_end = domain_value['y'] + rectangle.height
-
-        if (not Rectangle.overlap(x1_start, x1_end, y1_start, y1_end, x2_start, x2_end, y2_start, y2_end)):
-          reduced_domain.append(domain_value)
-
-      domain = reduced_domain
-      if(not domain):
-        rectangle.domain = domain
-        return
-
-    rectangle.domain = domain
 
   def find_rectangle_id(self, x, y):
     for rectangle in self.rectangles:
@@ -169,6 +167,9 @@ for _ in range(rectangle_count):
 # minimum remaining variable que for unassigned variable selecting
 mrv_que = []
 
+# has the same order as mrv_que
+positioned_que = []
+
 for rect in room.rectangles:
   heapq.heappush(mrv_que, rect)
 
@@ -176,16 +177,18 @@ def backtrack():
   if(len(mrv_que) == 0): return True
 
   rectangle = heapq.heappop(mrv_que)
-  room.reduce_domain(rectangle)
+  rectangle.reduce_domain(positioned_que)
   if(rectangle.width != rectangle.height):
     rectangle.rotate()
-    room.reduce_domain(rectangle)
+    rectangle.reduce_domain(positioned_que)
 
   for domain_value in rectangle.domain:
     rectangle.position = {'x': domain_value['x'], 'y': domain_value['y']}
     if(rectangle.rotated != domain_value['rotated']):
       rectangle.rotate()
+    positioned_que.append(rectangle)
     if(backtrack()): return True
+    positioned_que.pop()
 
   rectangle.position = {}
   rectangle.domain = rectangle.base_domain[:]
