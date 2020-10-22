@@ -85,34 +85,22 @@ class Room:
     for rectangle2 in self.rectangles:
       if(not bool(rectangle2.position)): continue
 
-      sum_h = rectangle.height + rectangle2.height
-      sum_w = rectangle.width + rectangle2.width
       reduced_domain = []
 
-      y_range = range(rectangle2.position['y'], rectangle2.position['y'] + rectangle2.height)
-      x_range = range(rectangle2.position['x'], rectangle2.position['x'] + rectangle2.width)
+      l2_x = rectangle2.position['x']
+      l2_y = rectangle2.position['y']
+      r2_x = rectangle2.position['x'] + rectangle2.width
+      r2_y = rectangle2.position['y'] + rectangle2.height
 
       for domain_value in domain:
         if(domain_value['rotated'] != rectangle.rotated):
           reduced_domain.append(domain_value)
           continue
 
-        if(sum_w > self.width):
-          if(domain_value['y'] in y_range):
-            continue
-
-        if(sum_h > self.height):
-          if(domain_value['x'] in x_range):
-            continue
-
         l1_x = domain_value['x']
         l1_y = domain_value['y']
         r1_x = domain_value['x'] + rectangle.width
         r1_y = domain_value['y'] + rectangle.height
-        l2_x = x_range.start
-        l2_y = y_range.start
-        r2_x = x_range.stop
-        r2_y = y_range.stop
 
         if(l1_x >= r2_x or l2_x >= r1_x):
           reduced_domain.append(domain_value)
