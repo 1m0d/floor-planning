@@ -164,7 +164,7 @@ rectangle_count = int(input())
 
 for _ in range(pillar_count):
   data = parse_int_from_input()
-  room.add_pillar(data[0], data[1])
+  room.add_pillar(data[1], data[0])
 
 for _ in range(rectangle_count):
   data = parse_int_from_input()
