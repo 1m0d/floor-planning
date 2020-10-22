@@ -62,7 +62,8 @@ class Room:
               continue
           rectangle.domain.append({'x': w, 'y': h, 'rotated': rectangle.rotated})
 
-      rectangle.rotate()
+      if(rectangle.width != rectangle.height):
+        rectangle.rotate()
 
     rectangle.base_domain = rectangle.domain[:]
 
@@ -167,10 +168,13 @@ for rect in room.rectangles:
 
 def backtrack():
   if(len(mrv_que) == 0): return True
+
   rectangle = heapq.heappop(mrv_que)
   room.reduce_domain(rectangle)
-  rectangle.rotate()
-  room.reduce_domain(rectangle)
+  if(rectangle.width != rectangle.height):
+    rectangle.rotate()
+    room.reduce_domain(rectangle)
+
   for domain_value in rectangle.domain:
     rectangle.position = {'x': domain_value['x'], 'y': domain_value['y']}
     if(rectangle.rotated != domain_value['rotated']):
