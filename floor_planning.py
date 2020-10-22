@@ -52,7 +52,7 @@ class Room:
     for _ in range(2):
       delta_h = self.height - rectangle.height
       delta_w = self.width - rectangle.width
-      if(delta_h <= 0 or delta_w <= 0):
+      if(delta_h < 0 or delta_w < 0):
         rectangle.rotate()
         continue
 
