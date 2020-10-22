@@ -35,6 +35,17 @@ class Rectangle:
     self.width, self.height = self.height, self.width
     self.rotated = not self.rotated
 
+  @staticmethod
+  def overlap(x1_start, x1_end, y1_start, y1_end, x2_start, x2_end, y2_start, y2_end):
+    if(x1_start >= x2_end or x2_start >= x1_end):
+      return False
+
+    if(y1_start >= y2_end or y2_start >= y1_end):
+      return False
+
+    return True
+
+
 class Room:
   def __init__(self, height, width):
     self.height = height
@@ -87,28 +98,23 @@ class Room:
 
       reduced_domain = []
 
-      l2_x = rectangle2.position['x']
-      l2_y = rectangle2.position['y']
-      r2_x = rectangle2.position['x'] + rectangle2.width
-      r2_y = rectangle2.position['y'] + rectangle2.height
+      x2_start = rectangle2.position['x']
+      y2_start = rectangle2.position['y']
+      x2_end = rectangle2.position['x'] + rectangle2.width
+      y2_end = rectangle2.position['y'] + rectangle2.height
 
       for domain_value in domain:
         if(domain_value['rotated'] != rectangle.rotated):
           reduced_domain.append(domain_value)
           continue
 
-        l1_x = domain_value['x']
-        l1_y = domain_value['y']
-        r1_x = domain_value['x'] + rectangle.width
-        r1_y = domain_value['y'] + rectangle.height
+        x1_start = domain_value['x']
+        y1_start = domain_value['y']
+        x1_end = domain_value['x'] + rectangle.width
+        y1_end = domain_value['y'] + rectangle.height
 
-        if(l1_x >= r2_x or l2_x >= r1_x):
+        if (not Rectangle.overlap(x1_start, x1_end, y1_start, y1_end, x2_start, x2_end, y2_start, y2_end)):
           reduced_domain.append(domain_value)
-          continue
-
-        elif(l1_y >= r2_y or l2_y >= r1_y):
-          reduced_domain.append(domain_value)
-          continue
 
       domain = reduced_domain
       if(not domain):
