@@ -186,6 +186,7 @@ def backtrack():
     if(backtrack()): return True
 
   rectangle.position = {}
+  room.calculate_base_domain(rectangle)
   heapq.heappush(mrv_que, rectangle)
 
   return False
