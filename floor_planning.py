@@ -115,6 +115,9 @@ class Room:
         reduced_domain.append(domain_value)
 
       domain = reduced_domain
+      if(not domain):
+        rectangle.domain = domain
+        return
 
     rectangle.domain = domain
 
