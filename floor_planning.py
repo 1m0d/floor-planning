@@ -6,18 +6,15 @@ class Rectangle:
   def __init__(self, width, height):
     self.width = width
     self.height = height
-    self.area = width * height
     self.rotated = False
     self.domain = []
+    self.domain_index = 0
     self.position = {}
     self.occupied_space = []
     self.domain_master = None
 
     Rectangle.rect_count += 1
     self.id = Rectangle.rect_count
-
-  def size(self):
-      return self.height * self.width
 
   # reversed for heapq
   def __lt__(self, other):
@@ -47,34 +44,36 @@ class Rectangle:
 
     return True
 
-  def reduce_domain(self, positioned_que):
-    for rectangle2 in positioned_que:
-      if(not self.domain):
-        return
+  def select_satisfactory_domain(self, positioned_que):
+    for index in range(self.domain_index, len(self.domain)):
+      domain_value = self.domain[index]
+      if(domain_value['rotated'] != self.rotated): self.rotate()
 
-      reduced_domain = []
+      unsatisfactory = False
 
-      x2_start = rectangle2.position['x']
-      y2_start = rectangle2.position['y']
-      x2_end = rectangle2.position['x'] + rectangle2.width
-      y2_end = rectangle2.position['y'] + rectangle2.height
+      x1_start = domain_value['x']
+      y1_start = domain_value['y']
+      x1_end = domain_value['x'] + self.width
+      y1_end = domain_value['y'] + self.height
 
-      for domain_value in self.domain:
-        if(domain_value['rotated'] != self.rotated):
-          reduced_domain.append(domain_value)
-          continue
+      for rectangle2 in positioned_que:
+        x2_start = rectangle2.position['x']
+        y2_start = rectangle2.position['y']
+        x2_end = rectangle2.position['x'] + rectangle2.width
+        y2_end = rectangle2.position['y'] + rectangle2.height
 
-        x1_start = domain_value['x']
-        y1_start = domain_value['y']
-        x1_end = domain_value['x'] + self.width
-        y1_end = domain_value['y'] + self.height
+        if(Rectangle.overlap(x1_start, x1_end, y1_start, y1_end, x2_start, x2_end, y2_start, y2_end)):
+          unsatisfactory = True
+          break
 
-        if (not Rectangle.overlap(x1_start, x1_end, y1_start, y1_end, x2_start, x2_end, y2_start, y2_end)):
-          reduced_domain.append(domain_value)
-          continue
+      self.domain_index += 1
+      if(unsatisfactory): continue
 
-      self.domain = reduced_domain
+      self.domain_index += 1
+      return domain_value
 
+    self.domain_index = 0
+    return False
 
 class Room:
   def __init__(self, height, width):
@@ -92,7 +91,6 @@ class Room:
   def calculate_base_domain(self, rectangle):
     if(rectangle.domain_master is not None):
       rectangle.domain = rectangle.domain_master.domain
-      rectangle.base_domain = rectangle.domain[:]
       return
 
     for _ in range(2):
@@ -113,8 +111,6 @@ class Room:
       else:
         break
 
-    rectangle.base_domain = rectangle.domain[:]
-
   def __pillar_overlap(self, w, h, rectangle):
     for pillar in self.pillars:
       x_range = range(w + 1, w + rectangle.width)
@@ -127,12 +123,14 @@ class Room:
   def find_rectangle_id(self, x, y):
     for rectangle in self.rectangles:
       if(not bool(rectangle.position)): continue
-      rectangle.calculate_occupied_space()
+
+      if(not rectangle.occupied_space):
+        rectangle.calculate_occupied_space()
+
       if({'x': x, 'y': y} in rectangle.occupied_space):
         return rectangle.id
 
-    #  return '.'
-    raise(Exception("Solution not found"))
+    return '.'
 
   def __str__(self):
     result = ""
@@ -146,11 +144,11 @@ class Room:
 
     return result
 
+# -----READ INPUT------
 
 def parse_int_from_input():
     return list(map(int, input().split('\t')))
 
-# read input
 data = parse_int_from_input()
 room = Room(data[0], data[1])
 
@@ -166,6 +164,8 @@ for _ in range(rectangle_count):
   rectangle = Rectangle(data[0], data[1])
   room.add_rectangle(rectangle)
 
+# ------MAIN------
+
 # minimum remaining variable que for unassigned variable selecting
 mrv_que = []
 
@@ -177,7 +177,7 @@ for rect in room.rectangles:
 
 last_rect = None
 for rect in mrv_que:
-  if(last_rect is not None and last_rect.area == rect.area):
+  if(last_rect is not None and last_rect.width == rect.width and last_rect.height == rect.height):
     rect.domain_master = last_rect
 
   room.calculate_base_domain(rect)
@@ -187,28 +187,21 @@ def backtrack():
   if(len(mrv_que) == 0): return True
 
   rectangle = heapq.heappop(mrv_que)
-  if(rectangle.domain_master is not None):
-    rectangle.domain = rectangle.domain_master.domain
-  rectangle.reduce_domain(positioned_que)
-  if(rectangle.width != rectangle.height):
-    rectangle.rotate()
-    rectangle.reduce_domain(positioned_que)
 
-  for domain_value in rectangle.domain:
+  while True:
+    domain_value = rectangle.select_satisfactory_domain(positioned_que)
+    if not(bool(domain_value)): break
+
     rectangle.position = {'x': domain_value['x'], 'y': domain_value['y']}
-    if(rectangle.rotated != domain_value['rotated']):
-      rectangle.rotate()
     positioned_que.append(rectangle)
     if(backtrack()): return True
     positioned_que.pop()
 
   rectangle.position = {}
 
-  if(rectangle.domain_master is None):
-    rectangle.domain = rectangle.base_domain[:]
   heapq.heappush(mrv_que, rectangle)
 
   return False
 
-backtrack()
+if(not backtrack()): raise(Exception("Solution not found"))
 print(room)
