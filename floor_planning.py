@@ -191,6 +191,9 @@ def backtrack():
 
   rectangle = heapq.heappop(mrv_que)
 
+  if(rectangle.domain_master is not None):
+    rectangle.domain_index = rectangle.domain_master.domain_index + 1
+
   while True:
     domain_value = rectangle.select_satisfactory_domain(positioned_que)
     if not(bool(domain_value)): break
