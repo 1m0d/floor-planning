@@ -114,11 +114,14 @@ class Room:
   def __pillar_overlap(self, w, h, rectangle):
     for pillar in self.pillars:
       x_range = range(w + 1, w + rectangle.width)
-      y_range = range(h + 1, h + rectangle.height)
-      if(pillar['x'] in x_range and pillar['y'] in y_range):
-        return True
+      if(pillar['x'] not in x_range):
+        return False
 
-    return False
+      y_range = range(h + 1, h + rectangle.height)
+      if(pillar['y'] not in y_range):
+        return False
+
+    return True
 
   def find_rectangle_id(self, x, y):
     for rectangle in self.rectangles:
